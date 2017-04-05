@@ -29,21 +29,32 @@ class RegisterForm extends Form
     public function getFields()
     {
         return [
-            'name' => [
-                'class' => EmailField::class,
-                'label' => 'Ваше имя',
-                'required' => true
-            ],
             'email' => [
                 'class' => EmailField::class,
-                'label' => 'Адрес электронной почты',
-                'required' => true
+                'label' => 'E-mail',
+                'required' => true,
+                'attributes' => [
+                    'placeholder' => 'E-mail'
+                ]
             ],
             'password' => [
                 'class' => PasswordField::class,
                 'label' => 'Пароль',
                 'validators' => [
                     new PasswordValidator()
+                ],
+                'attributes' => [
+                    'placeholder' => 'Пароль'
+                ]
+            ],
+            'password_repeat' => [
+                'class' => PasswordField::class,
+                'label' => 'Повторите пароль',
+                'validators' => [
+                    new PasswordValidator()
+                ],
+                'attributes' => [
+                    'placeholder' => 'Повторите пароль'
                 ]
             ]
         ];
@@ -51,6 +62,9 @@ class RegisterForm extends Form
 
     public function clean($attributes)
     {
+        if ($attributes['password'] != $attributes['password_repeat']) {
+            $this->addError('password_repeat', 'Указнные пароли не совпадают');
+        }
         if (User::objects()->filter(['email' => $attributes['email']])->count() > 1) {
             $this->addError('email', 'Данный адрес уже используется на сайте');
         }
@@ -62,10 +76,17 @@ class RegisterForm extends Form
         $hasher = UserModule::getPasswordHasher();
 
         $this->_user = new User();
-        $this->_user->name = $attributes['name'];
         $this->_user->password = $hasher::hash($attributes['password']);
         $this->_user->email = $attributes['email'];
-//        d($this->_user->send_sms);
+        Phact::app()->mail->template(
+            $attributes['email'],
+            "Вы успешно зарегистрировались",
+            'mail/register.tpl',
+            [
+                'email' => $attributes['email'],
+                'password' => $attributes['password']
+            ]
+        );
         return $this->_user->save();
     }
 

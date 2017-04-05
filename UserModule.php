@@ -14,11 +14,19 @@
 
 namespace Modules\User;
 
+use Modules\Admin\Traits\AdminTrait;
 use Modules\User\Helpers\Password;
 use Phact\Module\Module;
 
 class UserModule extends Module
 {
+    use AdminTrait;
+
+    public static function getVerboseName()
+    {
+        return "Пользователи";
+    }
+
     public static function getPasswordHasher()
     {
         return Password::class;

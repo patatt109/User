@@ -42,7 +42,8 @@ class User extends Model
             ],
             'password' => [
                 'class' => CharField::class,
-                'label' => 'Password'
+                'label' => 'Password',
+                'editable' => false
             ],
             'is_superuser' => [
                 'class' => BooleanField::class,
@@ -60,5 +61,10 @@ class User extends Model
     public function getIsGuest()
     {
         return $this->is_guest;
+    }
+
+    public function __toString()
+    {
+        return $this->email;
     }
 }

@@ -22,7 +22,7 @@ class PasswordValidator extends Validator
     public function validate($value)
     {
         $errors = [];
-        if (mb_strlen($value) < 6) {
+        if ($value && mb_strlen($value) < 6) {
             $errors[] = 'Пароль не может быть короче 6 символов';
         }
         return empty($errors) ? true : $errors;
