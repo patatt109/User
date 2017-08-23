@@ -75,6 +75,7 @@ class AuthController extends Controller
             Phact::app()->end();
         }
         if ($this->request->getIsPost() && $form->fill($_POST) && $form->valid) {
+            $form->save();
             $form->login();
             $this->redirect("user:register");
         }
