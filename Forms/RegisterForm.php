@@ -65,7 +65,7 @@ class RegisterForm extends Form
         if ($attributes['password'] != $attributes['password_repeat']) {
             $this->addError('password_repeat', 'Указнные пароли не совпадают');
         }
-        if (User::objects()->filter(['email' => $attributes['email']])->count() > 1) {
+        if (User::objects()->filter(['email' => $attributes['email']])->count() > 0) {
             $this->addError('email', 'Данный адрес уже используется на сайте');
         }
     }
