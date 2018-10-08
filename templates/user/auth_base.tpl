@@ -1,4 +1,4 @@
-{extends 'base.tpl'}
+{extends '_layouts/base.tpl'}
 
 {block 'heading'}
 {/block}
@@ -14,14 +14,14 @@
                 <li class="{if $active == 'login'}active{/if}">
                     <a href="{url 'user:login'}">
                         <span class="name">
-                            Вход
+                            {t 'User.main' 'Login'}
                         </span>
                     </a>
                 </li>
                 <li class="{if $active == 'register'}active{/if}">
                     <a href="{url 'user:register'}">
                         <span class="name">
-                            Регистрация
+                             {t 'User.main' 'Registration'}
                         </span>
                     </a>
                 </li>

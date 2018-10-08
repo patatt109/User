@@ -7,8 +7,6 @@
  * @author Okulov Anton
  * @email qantus@mail.ru
  * @version 1.0
- * @company HashStudio
- * @site http://hashstudio.ru
  * @date 07/08/16 16:17
  */
 
@@ -21,30 +19,45 @@ use Phact\Form\Fields\CheckboxField;
 use Phact\Form\Fields\EmailField;
 use Phact\Form\Fields\PasswordField;
 use Phact\Form\Form;
+use Phact\Interfaces\AuthInterface;
 use Phact\Main\Phact;
 use Phact\Form\Fields\CharField;
+use Phact\Translate\Translator;
 
 class PasswordForm extends Form
 {
+    use Translator;
+
     protected $_instance;
+
+    /**
+     * @var AuthInterface
+     */
+    protected $_auth;
+
+    public function __construct(array $config = [], AuthInterface $auth)
+    {
+        $this->_auth = $auth;
+        parent::__construct($config);
+    }
 
     public function getFields()
     {
         return [
             'current_password' => [
                 'class' => PasswordField::class,
-                'label' => 'Текущий пароль'
+                'label' => self::t('User.main', 'Current password')
             ],
             'new_password' => [
                 'class' => PasswordField::class,
-                'label' => 'Новый пароль',
+                'label' => self::t('User.main', 'New password'),
                 'validators' => [
                     new PasswordValidator()
                 ]
             ],
             'repeat_password' => [
                 'class' => PasswordField::class,
-                'label' => 'Повторите новый пароль'
+                'label' => self::t('User.main', 'Repeat new password')
             ],
         ];
     }
@@ -72,27 +85,21 @@ class PasswordForm extends Form
         $password = $attributes['current_password'];
         $newPassword = $attributes['new_password'];
         $repeatPassword = $attributes['repeat_password'];
-        $hasher = UserModule::getPasswordHasher();
         $user = $this->getInstance();
 
-        if (!$hasher::verify($password, $user->password)) {
-            $this->addError('current_password', 'Некорректный пароль');
+        if ($this->_auth->verifyPassword($user, $password)) {
+            $this->addError('current_password', self::t('User.main', 'Wrong password'));
         }
-
         if ($newPassword != $repeatPassword) {
-            $this->addError('repeat_password', 'Введенные пароли не совпадают');
+            $this->addError('repeat_password', self::t('User.main', 'Passwords do not match'));
         }
     }
 
     public function save()
     {
         $attributes = $this->getAttributes();
-        $hasher = UserModule::getPasswordHasher();
         $user = $this->getInstance();
-        $user->setAttributes([
-            'password' => $hasher::hash($attributes['new_password'])
-        ]);
-        $user->save();
-        return true;
+        $this->_auth->setPassword($user, $attributes['new_password']);
+        return $user->save();
     }
 }

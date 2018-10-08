@@ -10,7 +10,7 @@
         {raw $login_form->render()}
         <div class="button-line">
             <button type="submit" class="button upper expand black height bold">
-                Войти
+                {t 'User.main' 'Log in'}
             </button>
         </div>
     </form>

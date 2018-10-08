@@ -7,8 +7,6 @@
  * @author Okulov Anton
  * @email qantus@mail.ru
  * @version 1.0
- * @company HashStudio
- * @site http://hashstudio.ru
  * @date 05/04/17 13:12
  */
 namespace Modules\User\Admin;
@@ -16,6 +14,7 @@ namespace Modules\User\Admin;
 use Modules\Admin\Contrib\Admin;
 use Modules\User\Forms\UserAdminForm;
 use Modules\User\Models\User;
+use Phact\Translate\Translator;
 
 class UserAdmin extends Admin
 {
@@ -31,16 +30,16 @@ class UserAdmin extends Admin
 
     public function getForm()
     {
-        return new UserAdminForm();
+        return new UserAdminForm([], $this->_auth);
     }
 
-    public static function getName()
+    public function getName()
     {
-        return 'Пользователи';
+        return $this->t('User.main', 'Users');
     }
 
-    public static function getItemName()
+    public function getItemName()
     {
-        return 'Пользователь';
+        return $this->t('User.main', 'User');
     }
 }

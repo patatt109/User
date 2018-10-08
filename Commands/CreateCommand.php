@@ -7,27 +7,24 @@
  * @author Okulov Anton
  * @email qantus@mail.ru
  * @version 1.0
- * @company HashStudio
- * @site http://hashstudio.ru
  * @date 12/12/16 16:08
  */
 
 namespace Modules\User\Commands;
 
 use Modules\User\Models\User;
-use Modules\User\UserModule;
 use Phact\Commands\Command;
-use Phact\Main\Phact;
+use Phact\Interfaces\AuthInterface;
 
 class CreateCommand extends Command
 {
-    public function handle($arguments = [])
+    public function handle($arguments = [], AuthInterface $auth)
     {
         $email = readline("E-mail: ");
-        
-        if (User::objects()->filter(['email' => $email])->count() > 0) {
+
+        if ($auth->findUserByLogin($email)) {
             echo "User with email {$email} already exists";
-            Phact::app()->end();
+            exit();
         }
         
         $password = null;
@@ -35,13 +32,11 @@ class CreateCommand extends Command
             $password = readline("Password: ");
         }
 
-        $hasher = UserModule::getPasswordHasher();
-        
         $user = new User();
-        $user->email = $email;
-        $user->password = $hasher::hash($password);
         $user->is_superuser = true;
         $user->is_staff = true;
+        $auth->setLogin($user, $email);
+        $auth->setPassword($user, $password);
         $user->save();
         echo "Superuser with email {$email} created successfully";
     }

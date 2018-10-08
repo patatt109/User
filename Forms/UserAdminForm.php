@@ -8,8 +8,6 @@
  * @author Okulov Anton
  * @email qantus@mail.ru
  * @version 1.0
- * @company HashStudio
- * @site http://hashstudio.ru
  * @date 05/04/17 13:15
  */
 namespace Modules\User\Forms;
@@ -19,22 +17,37 @@ use Modules\User\Validators\PasswordValidator;
 use Phact\Form\Fields\PasswordField;
 use Phact\Form\ModelForm;
 use Modules\User\Models\User;
+use Phact\Interfaces\AuthInterface;
+use Phact\Translate\Translator;
 
 class UserAdminForm extends ModelForm
 {
+    use Translator;
+
+    /**
+     * @var AuthInterface
+     */
+    protected $_auth;
+
+    public function __construct(array $config = [], AuthInterface $auth)
+    {
+        $this->_auth = $auth;
+        parent::__construct($config);
+    }
+
     public function getFields()
     {
         return [
             'new_password' => [
                 'class' => PasswordField::class,
-                'label' => 'Новый пароль',
+                'label' => self::t('User.main', 'New password'),
                 'validators' => [
                     new PasswordValidator()
                 ]
             ],
             'new_password_repeat' => [
                 'class' => PasswordField::class,
-                'label' => 'Повторите пароль',
+                'label' => self::t('User.main', 'Repeat new password'),
                 'validators' => [
                     new PasswordValidator()
                 ]
@@ -44,8 +57,8 @@ class UserAdminForm extends ModelForm
 
     public function clean($attributes)
     {
-        if ($attributes['new_password'] && ($attributes['new_password'] != $attributes['new_password_repeat'])) {
-            $this->addError('new_password_repeat', 'Указнные пароли не совпадают');
+        if ($attributes['new_password'] && ($attributes['new_password'] !== $attributes['new_password_repeat'])) {
+            $this->addError('new_password_repeat', self::t('User.main', 'Passwords do not match'));
         }
     }
 
@@ -54,16 +67,15 @@ class UserAdminForm extends ModelForm
         return new User;
     }
 
-
     public function save($safeAttributes = [])
     {
         $saved = parent::save($safeAttributes);
         $password = $this->getField('new_password')->getValue();
         if ($saved && $password) {
-            $instance = $this->getInstance();
-            $hasher = UserModule::getPasswordHasher();
-            $instance->password = $hasher::hash($password);
-            $instance->save();
+            /** @var User $user */
+            $user = $this->getInstance();
+            $this->_auth->setPassword($user, $password);
+            $user->save();
         }
         return $saved;
     }

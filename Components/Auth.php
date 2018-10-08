@@ -7,21 +7,22 @@
  * @author Okulov Anton
  * @email qantus@mail.ru
  * @version 1.0
- * @company HashStudio
- * @site http://hashstudio.ru
  * @date 07/08/16 14:03
  */
 
 namespace Modules\User\Components;
 
 
+use Modules\User\Hashers\Password;
+use Modules\User\Hashers\PasswordHasher;
 use Modules\User\Models\User;
 use Phact\Helpers\SmartProperties;
-use Phact\Interfaces\AuthInterface;
-use Phact\Main\Phact;
+use Phact\Interfaces\UserInterface;
 use Phact\Orm\Model;
+use Phact\Request\HttpRequestInterface;
+use Phact\Request\SessionInterface;
 
-class Auth implements AuthInterface
+class Auth implements AuthUserInterface
 {
     use SmartProperties;
 
@@ -49,7 +50,39 @@ class Auth implements AuthInterface
 
     public $class = User::class;
 
-    public function login(Model $user, $rememberMe = true)
+    /**
+     * @var SessionInterface
+     */
+    protected $_session;
+
+    /**
+     * @var HttpRequestInterface
+     */
+    protected $_request;
+
+    /**
+     * @var PasswordHasher
+     */
+    protected $_hasher;
+
+    /**
+     * @var string
+     */
+    protected $_afterLoginRoute;
+
+    /**
+     * @var string
+     */
+    protected $_afterLogoutRoute;
+
+    public function __construct(HttpRequestInterface $request, SessionInterface $session, PasswordHasher $hasher = null)
+    {
+        $this->_request = $request;
+        $this->_session = $session;
+        $this->_hasher = $hasher ?: new Password();
+    }
+
+    public function login(UserInterface $user, $rememberMe = true)
     {
         $this->updateSession($user);
         if ($rememberMe) {
@@ -77,7 +110,7 @@ class Auth implements AuthInterface
         return $this->_user;
     }
 
-    public function setUser(Model $user)
+    public function setUser(UserInterface $user)
     {
         $this->_user = $user;
         $this->updateCookie($user);
@@ -100,21 +133,11 @@ class Auth implements AuthInterface
         return $user;
     }
 
-    /**
-     * Find user in database by id
-     * @param $id
-     */
-    public function findUser($id)
-    {
-        $class = $this->class;
-        return $class::objects()->filter(['id' => $id])->limit(1)->get();
-    }
-
     public function getSessionUser()
     {
         $id = $this->getSession();
         if ($id) {
-            return $this->findUser($id);
+            return $this->findUserById($id);
         }
         return null;
     }
@@ -128,7 +151,7 @@ class Auth implements AuthInterface
                 $id = $data[0];
                 $key = $data[1];
 
-                $user = $this->findUser($id);
+                $user = $this->findUserById($id);
                 if ($user && password_verify($user->email . $user->password, $key)) {
                     return $user;
                 }
@@ -150,35 +173,110 @@ class Auth implements AuthInterface
 
     public function setSession($session)
     {
-        Phact::app()->request->session->add($this->authSessionName, $session);
+        $this->_session->add($this->authSessionName, $session);
     }
 
     public function getSession()
     {
-        return Phact::app()->request->session->get($this->authSessionName);
+        return $this->_session->get($this->authSessionName);
     }
 
     public function removeSession($clearSession = true)
     {
         if ($clearSession) {
-            Phact::app()->request->session->destroy();
+            $this->_session->destroy();
         } else {
-            Phact::app()->request->session->remove($this->authSessionName);
+            $this->_session->remove($this->authSessionName);
         }
     }
     
     public function setCookie($cookie)
     {
-        Phact::app()->request->cookie->add($this->authCookieName, $cookie, time() + $this->expire, '/');
+        $this->_request->getCookie()->add($this->authCookieName, $cookie, time() + $this->expire, '/');
     }
     
     public function getCookie()
     {
-        return Phact::app()->request->cookie->get($this->authCookieName);
+        return $this->_request->getCookie()->get($this->authCookieName);
     }
 
     public function removeCookie()
     {
-        Phact::app()->request->cookie->remove($this->authCookieName);
+        $this->_request->getCookie()->remove($this->authCookieName);
+    }
+
+    /**
+     * @param UserInterface $user
+     * @param string $password
+     * @return bool
+     */
+    public function verifyPassword(UserInterface $user, string $password)
+    {
+        return $this->_hasher->verify($password, $user->getPassword());
+    }
+
+    /**
+     * @param UserInterface $user
+     * @param string $password
+     */
+    public function setPassword(UserInterface $user, string $password)
+    {
+        $hashed = $this->_hasher->hash($password);
+        $user->setPassword($hashed);
+    }
+
+    /**
+     * @param UserInterface $user
+     * @param string $login
+     */
+    public function setLogin(UserInterface $user, string $login)
+    {
+        $user->setLogin($login);
+    }
+
+    public function findUserByLogin($login)
+    {
+        $class = $this->class;
+        return $class::objects()->filter(['email' => $login])->limit(1)->get();
+    }
+
+    public function findUserById($id)
+    {
+        $class = $this->class;
+        return $class::objects()->filter(['id' => $id])->limit(1)->get();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAfterLoginRoute()
+    {
+        return $this->_afterLoginRoute;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAfterLogoutRoute()
+    {
+        return $this->_afterLogoutRoute;
+    }
+
+    /**
+     * @param string $route
+     * @return void
+     */
+    public function setAfterLoginRoute(string $route)
+    {
+        $this->_afterLoginRoute = $route;
+    }
+
+    /**
+     * @param string $route
+     * @return void
+     */
+    public function setAfterLogoutRoute(string $route)
+    {
+        $this->_afterLogoutRoute = $route;
     }
 }

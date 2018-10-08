@@ -7,54 +7,63 @@
  * @author Okulov Anton
  * @email qantus@mail.ru
  * @version 1.0
- * @company HashStudio
- * @site http://hashstudio.ru
  * @date 07/08/16 16:17
  */
 
 namespace Modules\User\Forms;
 
+use Modules\Mail\Components\MailerInterface;
 use Modules\User\Models\User;
-use Modules\User\UserModule;
 use Modules\User\Validators\PasswordValidator;
 use Phact\Form\Fields\EmailField;
 use Phact\Form\Fields\PasswordField;
 use Phact\Form\Form;
-use Phact\Main\Phact;
+use Phact\Interfaces\AuthInterface;
+use Phact\Translate\Translator;
 
 class RegisterForm extends Form
 {
+    use Translator;
+
     protected $_user;
+
+    /**
+     * @var AuthInterface
+     */
+    protected $_auth;
+
+    /**
+     * @var MailerInterface
+     */
+    protected $_mailer;
+
+    public function __construct(array $config = [], AuthInterface $auth, MailerInterface $mailer = null)
+    {
+        $this->_auth = $auth;
+        $this->_mailer = $mailer;
+        parent::__construct($config);
+    }
 
     public function getFields()
     {
         return [
             'email' => [
                 'class' => EmailField::class,
-                'label' => 'E-mail',
-                'required' => true,
-                'attributes' => [
-                    'placeholder' => 'E-mail'
-                ]
+                'label' => self::t('User.main', 'E-mail'),
+                'required' => true
             ],
             'password' => [
                 'class' => PasswordField::class,
-                'label' => 'Пароль',
+                'label' => self::t('User.main', 'Password'),
                 'validators' => [
                     new PasswordValidator()
-                ],
-                'attributes' => [
-                    'placeholder' => 'Пароль'
                 ]
             ],
             'password_repeat' => [
                 'class' => PasswordField::class,
-                'label' => 'Повторите пароль',
+                'label' => self::t('User.main', 'Repeat password'),
                 'validators' => [
                     new PasswordValidator()
-                ],
-                'attributes' => [
-                    'placeholder' => 'Повторите пароль'
                 ]
             ]
         ];
@@ -62,36 +71,37 @@ class RegisterForm extends Form
 
     public function clean($attributes)
     {
-        if ($attributes['password'] != $attributes['password_repeat']) {
-            $this->addError('password_repeat', 'Указнные пароли не совпадают');
+        if ($attributes['password'] !== $attributes['password_repeat']) {
+            $this->addError('password_repeat', self::t('User.main', 'Passwords do not match'));
         }
-        if (User::objects()->filter(['email' => $attributes['email']])->count() > 0) {
-            $this->addError('email', 'Данный адрес уже используется на сайте');
+        if ($this->_auth->findUserByLogin($attributes['email'])) {
+            $this->addError('email', self::t('User.main', 'This e-mail address is already used'));
         }
     }
 
     public function save()
     {
         $attributes = $this->getAttributes();
-        $hasher = UserModule::getPasswordHasher();
 
         $this->_user = new User();
-        $this->_user->password = $hasher::hash($attributes['password']);
-        $this->_user->email = $attributes['email'];
-        Phact::app()->mail->template(
-            $attributes['email'],
-            "Вы успешно зарегистрировались",
-            'mail/register.tpl',
-            [
-                'email' => $attributes['email'],
-                'password' => $attributes['password']
-            ]
-        );
+        $this->_auth->setLogin($this->_user, $attributes['email']);
+        $this->_auth->setPassword($this->_user, $attributes['password']);
+        if ($this->_mailer) {
+            $this->_mailer->template(
+                $attributes['email'],
+                self::t('User.main', 'You have successfully registered'),
+                'mail/register.tpl',
+                [
+                    'email' => $attributes['email'],
+                    'password' => $attributes['password']
+                ]
+            );
+        }
         return $this->_user->save();
     }
 
     public function login()
     {
-        Phact::app()->auth->login($this->_user);
+        $this->_auth->login($this->_user);
     }
 }

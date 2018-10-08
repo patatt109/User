@@ -10,7 +10,7 @@
         {raw $register_form->render()}
         <div class="button-line">
             <button type="submit" class="button upper expand black height bold">
-                Зарегистрироваться
+                {t 'User.main' 'Register'}
             </button>
         </div>
     </form>
