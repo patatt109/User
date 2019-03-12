@@ -11,9 +11,9 @@
   },
   "require": {
     "php": "^7.1.3",
-    "phact-cmf/phact": "^2.0.0",
-    "phact-cmf-modules/admin": "^2.0.0",
-    "phact-cmf-modules/mail": "^2.0.0"
+    "phact-cmf/phact": "^3.0.0",
+    "phact-cmf-modules/admin": "^3.0.0",
+    "phact-cmf-modules/mail": "^3.0.0"
   },
   "authors": [
     {
