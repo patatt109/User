@@ -18,7 +18,7 @@ use Phact\Interfaces\AuthInterface;
 
 class CreateCommand extends Command
 {
-    public function handle($arguments = [], AuthInterface $auth)
+    public function handle($arguments, AuthInterface $auth)
     {
         $email = readline("E-mail: ");
 
@@ -26,7 +26,7 @@ class CreateCommand extends Command
             echo "User with email {$email} already exists";
             exit();
         }
-        
+
         $password = null;
         while (!$password) {
             $password = readline("Password: ");
