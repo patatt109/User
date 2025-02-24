@@ -34,7 +34,7 @@ class RecoverForm extends Form
      */
     protected $_mailer;
 
-    public function __construct(array $config = [], AuthInterface $auth, MailerInterface $mailer = null)
+    public function __construct(AuthInterface $auth, array $config = [], MailerInterface $mailer = null)
     {
         $this->_auth = $auth;
         $this->_mailer = $mailer;

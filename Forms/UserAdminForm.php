@@ -29,7 +29,7 @@ class UserAdminForm extends ModelForm
      */
     protected $_auth;
 
-    public function __construct(array $config = [], AuthInterface $auth)
+    public function __construct(AuthInterface $auth, array $config = [])
     {
         $this->_auth = $auth;
         parent::__construct($config);

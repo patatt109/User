@@ -11,19 +11,29 @@
   },
   "require": {
     "php": "^7.1.3 | ^8.0",
-    "phact-cmf/phact": "^4.0.0",
-    "phact-cmf-modules/admin": "^4.0.0",
-    "phact-cmf-modules/mail": "^4.0.0"
+    "phact-cmf/phact": "dev-main",
+    "phact-cmf-modules/admin": "dev-main",
+    "phact-cmf-modules/mail": "dev-main"
   },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/patatt109/phact"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/patatt109/Admin"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/patatt109/Mail"
+    }
+  ],
   "authors": [
     {
       "name": "Anton Okulov",
       "email": "qantus@mail.ru",
       "role": "Developer"
     }
-  ],
-  "support": {
-    "email": "qantus@mail.ru",
-    "issues": "https://github.com/phact-cmf-modules/User/issues"
-  }
+  ]
 }

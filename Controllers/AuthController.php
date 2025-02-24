@@ -43,7 +43,7 @@ class AuthController extends Controller
 
     public function login()
     {
-        $form = new LoginForm([], $this->_auth);
+        $form = new LoginForm($this->_auth, []);
         if ($this->request->getIsAjax() && $this->request->getIsPost()) {
             $data = [
                 'state' => 'success'
@@ -106,6 +106,6 @@ class AuthController extends Controller
     public function logout()
     {
         $this->_auth->logout();
-        $this->redirect('main:index');
+        $this->redirect($this->_auth->getAfterLogoutRoute());
     }
 }

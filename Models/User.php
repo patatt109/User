@@ -56,7 +56,12 @@ class User extends Model implements UserInterface
                 'class' => BooleanField::class,
                 'label' => self::t('User.main', 'Is staff'),
                 'default' => false
-            ]
+            ],
+            'is_picker' => [
+                'class' => BooleanField::class,
+                'label' => 'Комплектовщик заказов',
+                'default' => false
+            ],
         ];
     }
 
@@ -68,6 +73,11 @@ class User extends Model implements UserInterface
     public function getIsSuperuser()
     {
         return $this->is_superuser;
+    }
+
+    public function getIsStaff()
+    {
+        return !$this->is_superuser && $this->is_staff;
     }
 
     /**
