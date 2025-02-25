@@ -73,7 +73,7 @@ class AuthController extends Controller
 
     public function register()
     {
-        $form = new RegisterForm([], $this->_auth);
+        $form = new RegisterForm($this->_auth, []);
         if ($this->request->getIsAjax() && $this->request->getIsPost()) {
             $data = [
                 'state' => 'success'
