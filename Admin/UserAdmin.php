@@ -30,7 +30,7 @@ class UserAdmin extends Admin
 
     public function getForm()
     {
-        return new UserAdminForm([], $this->_auth);
+        return new UserAdminForm($this->_auth, []);
     }
 
     public function getName()
